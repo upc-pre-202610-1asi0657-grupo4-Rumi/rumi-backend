@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: building-management-service
+  datasource:
+    url: ${BUILDING_DB_URL:jdbc:postgresql://localhost:5432/rumi_building_management}
+    username: ${BUILDING_DB_USERNAME:postgres}
+    password: ${BUILDING_DB_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      igpFeed:
+        sliding-window-type: count_based
+        sliding-window-size: 4
+        minimum-number-of-calls: 2
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
