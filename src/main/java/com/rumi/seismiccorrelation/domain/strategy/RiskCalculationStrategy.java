@@ -1,4 +1,4 @@
-package com.rumi.riskassessment.domain.strategy;
+package com.rumi.seismiccorrelation.domain.strategy;
 
 public interface RiskCalculationStrategy {
 
