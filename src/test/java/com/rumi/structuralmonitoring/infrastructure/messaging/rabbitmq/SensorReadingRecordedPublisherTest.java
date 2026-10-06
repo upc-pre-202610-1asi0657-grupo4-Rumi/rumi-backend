@@ -1,6 +1,5 @@
 package com.rumi.structuralmonitoring.infrastructure.messaging.rabbitmq;
 
-import com.rumi.shared.infrastructure.messaging.RabbitMqConfiguration;
 import com.rumi.structuralmonitoring.domain.event.SensorReadingRecorded;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -28,8 +27,8 @@ class SensorReadingRecordedPublisherTest {
         publisher.publish(event);
 
         verify(rabbitTemplate).convertAndSend(
-                RabbitMqConfiguration.SENSOR_READING_EXCHANGE,
-                RabbitMqConfiguration.SENSOR_READING_ROUTING_KEY,
+                StructuralMonitoringMessagingConfiguration.SENSOR_READING_EXCHANGE,
+                StructuralMonitoringMessagingConfiguration.SENSOR_READING_ROUTING_KEY,
                 event
         );
     }
