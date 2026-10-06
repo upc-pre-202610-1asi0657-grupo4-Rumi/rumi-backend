@@ -2,7 +2,7 @@ package com.rumi.seismiccorrelation.infrastructure.messaging.rabbitmq;
 
 import com.rumi.seismiccorrelation.application.SensorReadingRecordedHandler;
 import com.rumi.shared.infrastructure.messaging.RabbitMqConfiguration;
-import com.rumi.structuralmonitoring.domain.event.SensorReadingRecorded;
+import com.rumi.seismiccorrelation.domain.event.SensorReadingRecorded;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
