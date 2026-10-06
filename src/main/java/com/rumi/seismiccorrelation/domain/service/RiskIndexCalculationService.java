@@ -1,6 +1,6 @@
-package com.rumi.riskassessment.domain.service;
+package com.rumi.seismiccorrelation.domain.service;
 
-import com.rumi.riskassessment.domain.strategy.RiskCalculationStrategy;
+import com.rumi.seismiccorrelation.domain.strategy.RiskCalculationStrategy;
 
 import java.util.Objects;
 

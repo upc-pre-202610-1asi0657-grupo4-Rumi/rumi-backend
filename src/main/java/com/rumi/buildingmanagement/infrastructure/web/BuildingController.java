@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/buildings")
+@RequestMapping("/api/v1/buildings")
 public class BuildingController {
 
     private final BuildingApplicationService buildingService;

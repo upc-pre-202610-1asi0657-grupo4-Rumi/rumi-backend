@@ -1,14 +1,30 @@
 spring:
   application:
     name: building-management-service
+  # Building Management owns buildingsdb. It is the only context with JPA entities,
+  # so it is the one bound to the Spring Boot datasource.
   datasource:
-    url: ${BUILDING_DB_URL:jdbc:postgresql://localhost:5432/rumi_building_management}
+    url: ${BUILDING_DB_URL:jdbc:postgresql://localhost:5432/buildingsdb}
     username: ${BUILDING_DB_USERNAME:postgres}
     password: ${BUILDING_DB_PASSWORD:postgres}
   jpa:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+
+# One database per bounded context. Structural Monitoring and Seismic Correlation have
+# no persistent entities yet; their databases are reserved here and become
+# spring.datasource in their own services. See docs/refactoring/database-per-context.md.
+rumi:
+  datasource:
+    monitoring:
+      url: ${MONITORING_DB_URL:jdbc:postgresql://localhost:5432/sensorreadingsdb}
+      username: ${MONITORING_DB_USERNAME:postgres}
+      password: ${MONITORING_DB_PASSWORD:postgres}
+    seismic:
+      url: ${SEISMIC_DB_URL:jdbc:postgresql://localhost:5432/seismiceventsdb}
+      username: ${SEISMIC_DB_USERNAME:postgres}
+      password: ${SEISMIC_DB_PASSWORD:postgres}
 
 resilience4j:
   circuitbreaker:

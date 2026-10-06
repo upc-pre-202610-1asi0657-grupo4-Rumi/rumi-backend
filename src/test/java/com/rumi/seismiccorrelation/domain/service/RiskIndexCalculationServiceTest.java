@@ -1,7 +1,7 @@
-package com.rumi.riskassessment.domain.service;
+package com.rumi.seismiccorrelation.domain.service;
 
-import com.rumi.riskassessment.domain.strategy.AiRiskStrategy;
-import com.rumi.riskassessment.domain.strategy.RuleBasedRiskStrategy;
+import com.rumi.seismiccorrelation.domain.strategy.AiRiskStrategy;
+import com.rumi.seismiccorrelation.domain.strategy.RuleBasedRiskStrategy;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
