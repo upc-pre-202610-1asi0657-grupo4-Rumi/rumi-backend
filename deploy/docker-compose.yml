@@ -1,0 +1,42 @@
+# Rumi completo en local con el perfil dev (H2 en memoria, sin RabbitMQ ni PostgreSQL).
+# Requiere los 9 repositorios clonados lado a lado (ver clone-all.sh). Uso, desde rumi-backend/deploy:  docker compose up --build
+services:
+  rumi-api-gateway:
+    build: { context: ../../rumi-api-gateway, args: { PORT: 8080 } }
+    ports: ["8080:8080"]
+    environment:
+      BUILDING_SERVICE_URL: http://rumi-building-service:8081
+      MONITORING_SERVICE_URL: http://rumi-monitoring-service:8082
+      SEISMIC_SERVICE_URL: http://rumi-seismic-service:8083
+      IAM_SERVICE_URL: http://rumi-iam-service:8084
+      NOTIFICATION_SERVICE_URL: http://rumi-notification-service:8085
+      SAFETY_SERVICE_URL: http://rumi-safety-service:8086
+      BILLING_SERVICE_URL: http://rumi-billing-service:8087
+      MAINTENANCE_SERVICE_URL: http://rumi-maintenance-service:8088
+  rumi-building-service:
+    build: { context: ../../rumi-building-service, args: { PORT: 8081 } }
+    ports: ["8081:8081"]
+    environment: { SPRING_PROFILES_ACTIVE: dev }
+  rumi-monitoring-service:
+    build: { context: ../../rumi-monitoring-service, args: { PORT: 8082 } }
+    ports: ["8082:8082"]
+    environment: { SPRING_PROFILES_ACTIVE: dev }
+  rumi-seismic-service:
+    build: { context: ../../rumi-seismic-service, args: { PORT: 8083 } }
+    ports: ["8083:8083"]
+    environment: { SPRING_PROFILES_ACTIVE: dev }
+  rumi-iam-service:
+    build: { context: ../../rumi-iam-service, args: { PORT: 8084 } }
+    ports: ["8084:8084"]
+  rumi-notification-service:
+    build: { context: ../../rumi-notification-service, args: { PORT: 8085 } }
+    ports: ["8085:8085"]
+  rumi-safety-service:
+    build: { context: ../../rumi-safety-service, args: { PORT: 8086 } }
+    ports: ["8086:8086"]
+  rumi-billing-service:
+    build: { context: ../../rumi-billing-service, args: { PORT: 8087 } }
+    ports: ["8087:8087"]
+  rumi-maintenance-service:
+    build: { context: ../../rumi-maintenance-service, args: { PORT: 8088 } }
+    ports: ["8088:8088"]
