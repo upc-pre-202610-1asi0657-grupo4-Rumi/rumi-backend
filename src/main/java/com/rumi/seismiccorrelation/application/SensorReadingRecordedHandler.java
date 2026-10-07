@@ -1,6 +1,6 @@
 package com.rumi.seismiccorrelation.application;
 
-import com.rumi.structuralmonitoring.domain.event.SensorReadingRecorded;
+import com.rumi.seismiccorrelation.domain.event.SensorReadingRecorded;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
