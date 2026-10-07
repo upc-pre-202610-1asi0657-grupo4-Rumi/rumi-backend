@@ -1,0 +1,9 @@
+{"info":{"name":"Rumi Sprint 1","schema":"https://schema.getpostman.com/json/collection/v2.1.0/collection.json"},
+"variable":[{"key":"gw","value":"http://localhost:8080"},{"key":"bid","value":"7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d"}],
+"item":[
+{"name":"Building - GET building","request":{"method":"GET","url":"{{gw}}/api/v1/buildings/{{bid}}"},"event":[{"listen":"test","script":{"exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"Building - GET buildings","request":{"method":"GET","url":"{{gw}}/api/v1/buildings"},"event":[{"listen":"test","script":{"exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"Building - GET sensors","request":{"method":"GET","url":"{{gw}}/api/v1/buildings/{{bid}}/sensors"},"event":[{"listen":"test","script":{"exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"Monitoring - GET latest readings","request":{"method":"GET","url":"{{gw}}/api/v1/readings/latest?buildingId={{bid}}"},"event":[{"listen":"test","script":{"exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"Seismic - GET latest risk index","request":{"method":"GET","url":"{{gw}}/api/v1/buildings/{{bid}}/risk-indexes/latest"},"event":[{"listen":"test","script":{"exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"Seismic - GET seismic events","request":{"method":"GET","url":"{{gw}}/api/v1/seismic-events"},"event":[{"listen":"test","script":{"exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]}]}
