@@ -1,6 +1,55 @@
-# Rumi completo en local con el perfil dev (H2 en memoria, sin RabbitMQ ni PostgreSQL).
-# Requiere los 9 repositorios clonados lado a lado (ver clone-all.sh). Uso, desde rumi-backend/deploy:  docker compose up --build
+
+# Rumi completo en local con infraestructura real.
+# Requiere los 9 repositorios clonados lado a lado (ver clone-all.sh).
+# Uso, desde rumi-backend/deploy: docker compose up --build
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: rumi
+      POSTGRES_PASSWORD: rumi
+      POSTGRES_DB: buildingsdb
+    ports: ["5432:5432"]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../../rumi-building-service/docs/schema.sql:/docker-entrypoint-initdb.d/01-building-schema.sql:ro
+      - ./postgres/init/02-create-seismic-database.sql:/docker-entrypoint-initdb.d/02-create-seismic-database.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rumi -d buildingsdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  timescaledb:
+    image: timescale/timescaledb:2.17.2-pg16
+    environment:
+      POSTGRES_USER: rumi
+      POSTGRES_PASSWORD: rumi
+      POSTGRES_DB: sensorreadingsdb
+    ports: ["5433:5432"]
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+      - ./timescaledb/init/01-enable-timescaledb.sql:/docker-entrypoint-initdb.d/01-enable-timescaledb.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rumi -d sensorreadingsdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    environment:
+      RABBITMQ_DEFAULT_USER: rumi
+      RABBITMQ_DEFAULT_PASS: rumi
+    ports: ["5672:5672", "15672:15672"]
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   rumi-api-gateway:
     build: { context: ../../rumi-api-gateway, args: { PORT: 8080 } }
     ports: ["8080:8080"]
@@ -16,15 +65,48 @@ services:
   rumi-building-service:
     build: { context: ../../rumi-building-service, args: { PORT: 8081 } }
     ports: ["8081:8081"]
-    environment: { SPRING_PROFILES_ACTIVE: dev }
+    environment:
+      BUILDING_DB_URL: jdbc:postgresql://postgres:5432/buildingsdb
+      BUILDING_DB_USERNAME: rumi
+      BUILDING_DB_PASSWORD: rumi
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   rumi-monitoring-service:
     build: { context: ../../rumi-monitoring-service, args: { PORT: 8082 } }
     ports: ["8082:8082"]
-    environment: { SPRING_PROFILES_ACTIVE: dev }
+    environment:
+      MONITORING_DB_URL: jdbc:postgresql://timescaledb:5432/sensorreadingsdb
+      MONITORING_DB_USERNAME: rumi
+      MONITORING_DB_PASSWORD: rumi
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: rumi
+      RABBITMQ_PASSWORD: rumi
+      MESSAGING_ENABLED: "true"
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
   rumi-seismic-service:
     build: { context: ../../rumi-seismic-service, args: { PORT: 8083 } }
     ports: ["8083:8083"]
-    environment: { SPRING_PROFILES_ACTIVE: dev }
+    environment:
+      SEISMIC_DB_URL: jdbc:postgresql://postgres:5432/seismiceventsdb
+      SEISMIC_DB_USERNAME: rumi
+      SEISMIC_DB_PASSWORD: rumi
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: rumi
+      RABBITMQ_PASSWORD: rumi
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
   rumi-iam-service:
     build: { context: ../../rumi-iam-service, args: { PORT: 8084 } }
     ports: ["8084:8084"]
@@ -40,3 +122,8 @@ services:
   rumi-maintenance-service:
     build: { context: ../../rumi-maintenance-service, args: { PORT: 8088 } }
     ports: ["8088:8088"]
+
+volumes:
+  postgres_data:
+  timescaledb_data:
+  rabbitmq_data:
