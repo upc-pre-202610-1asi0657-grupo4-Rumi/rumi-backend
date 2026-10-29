@@ -80,6 +80,7 @@ services:
       MONITORING_DB_URL: jdbc:postgresql://timescaledb:5432/sensorreadingsdb
       MONITORING_DB_USERNAME: rumi
       MONITORING_DB_PASSWORD: rumi
+      RUMI_TIMESCALE_HYPERTABLE_INITIALIZATION: "true"
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: rumi
