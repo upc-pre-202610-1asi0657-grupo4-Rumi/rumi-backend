@@ -32,7 +32,9 @@ Cada servicio es independiente: tiene su propio repositorio, su Dockerfile y su 
 
 ## Ejecutar todos los servicios con Docker Compose
 
-Requisitos: Docker con Compose v2 y Git. No se necesita PostgreSQL ni RabbitMQ, porque los servicios arrancan con el perfil `dev` (H2 en memoria).
+Requisitos: Docker con Compose v2 y Git. Docker Compose levanta PostgreSQL,
+TimescaleDB y RabbitMQ junto a los servicios; no se requieren instalaciones locales
+adicionales de esas herramientas.
 
 ```bash
 mkdir rumi && cd rumi

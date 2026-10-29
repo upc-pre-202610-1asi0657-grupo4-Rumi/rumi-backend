@@ -1,6 +1,6 @@
 # Despliegue local con Docker Compose
 
-Levanta los nueve servicios de Rumi (perfil `dev`, sin PostgreSQL ni RabbitMQ).
+Levanta los nueve servicios de Rumi con PostgreSQL, TimescaleDB y RabbitMQ.
 
 ```bash
 mkdir rumi && cd rumi
@@ -17,5 +17,14 @@ curl http://localhost:8080/api/v1/buildings
 | api-gateway | 8080 |
 | building / monitoring / seismic | 8081 / 8082 / 8083 |
 | iam / notification / safety / billing / maintenance | 8084 a 8088 |
+| PostgreSQL / TimescaleDB | 5432 / 5433 |
+| RabbitMQ AMQP / management | 5672 / 15672 |
+
+Las credenciales locales para las bases de datos y RabbitMQ son `rumi` / `rumi`.
+RabbitMQ Management queda disponible en `http://localhost:15672`.
+
+`buildingsdb` y `seismiceventsdb` se alojan en PostgreSQL; `sensorreadingsdb` se
+aloja en TimescaleDB, con la extensión `timescaledb` habilitada. Los datos persisten
+en volúmenes de Docker.
 
 Los Dockerfile están en cada repositorio de servicio.
