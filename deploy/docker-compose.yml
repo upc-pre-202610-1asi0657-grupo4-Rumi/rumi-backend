@@ -16,6 +16,8 @@ services:
       - ./postgres/init/02-create-seismic-database.sql:/docker-entrypoint-initdb.d/02-create-seismic-database.sql:ro
       - ./postgres/init/03-create-notifications-database.sql:/docker-entrypoint-initdb.d/03-create-notifications-database.sql:ro
       - ../../rumi-notification-service/docs/schema.sql:/opt/rumi/notification-schema.sql:ro
+      - ../../rumi-iam-service/docs/schema.sql:/opt/rumi/iam-schema.sql:ro
+      - ./postgres/init/04-create-iam-database.sql:/docker-entrypoint-initdb.d/04-create-iam-database.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U rumi -d buildingsdb"]
       interval: 5s
@@ -113,6 +115,14 @@ services:
   rumi-iam-service:
     build: { context: ../../rumi-iam-service, args: { PORT: 8084 } }
     ports: ["8084:8084"]
+    environment:
+      IAM_DB_URL: jdbc:postgresql://postgres:5432/iamdb
+      IAM_DB_USERNAME: rumi
+      IAM_DB_PASSWORD: rumi
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET (at least 32 characters) before running docker compose}
+    depends_on:
+      postgres:
+        condition: service_healthy
   rumi-notification-service:
     build: { context: ../../rumi-notification-service, args: { PORT: 8085 } }
     ports: ["8085:8085"]

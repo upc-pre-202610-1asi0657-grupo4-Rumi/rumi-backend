@@ -27,6 +27,11 @@ RabbitMQ Management queda disponible en `http://localhost:15672`.
 `rumi-notification-service/docs/schema.sql` al inicializar el volumen. Monitoring y
 Notifications se conectan a RabbitMQ.
 
+`iamdb` tambien se aloja en PostgreSQL y se crea desde `rumi-iam-service/docs/schema.sql`.
+Los scripts de inicializacion solo se ejecutan con un volumen vacio; para recrear las
+bases de datos usa `docker compose down -v`. Antes de `docker compose up` exporta
+`JWT_SECRET` (al menos 32 caracteres), por ejemplo `export JWT_SECRET=...`.
+
 `buildingsdb` y `seismiceventsdb` se alojan en PostgreSQL; `sensorreadingsdb` se
 aloja en TimescaleDB, con la extensión `timescaledb` habilitada. Los datos persisten
 en volúmenes de Docker.
