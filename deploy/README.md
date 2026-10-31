@@ -23,6 +23,10 @@ curl http://localhost:8080/api/v1/buildings
 Las credenciales locales para las bases de datos y RabbitMQ son `rumi` / `rumi`.
 RabbitMQ Management queda disponible en `http://localhost:15672`.
 
+`notificationsdb` tambien se aloja en PostgreSQL. Se crea junto con sus tablas desde
+`rumi-notification-service/docs/schema.sql` al inicializar el volumen. Monitoring y
+Notifications se conectan a RabbitMQ.
+
 `buildingsdb` y `seismiceventsdb` se alojan en PostgreSQL; `sensorreadingsdb` se
 aloja en TimescaleDB, con la extensión `timescaledb` habilitada. Los datos persisten
 en volúmenes de Docker.
