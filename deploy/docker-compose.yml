@@ -14,6 +14,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ../../rumi-building-service/docs/schema.sql:/docker-entrypoint-initdb.d/01-building-schema.sql:ro
       - ./postgres/init/02-create-seismic-database.sql:/docker-entrypoint-initdb.d/02-create-seismic-database.sql:ro
+      - ./postgres/init/03-create-notifications-database.sql:/docker-entrypoint-initdb.d/03-create-notifications-database.sql:ro
+      - ../../rumi-notification-service/docs/schema.sql:/opt/rumi/notification-schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U rumi -d buildingsdb"]
       interval: 5s
@@ -114,6 +116,19 @@ services:
   rumi-notification-service:
     build: { context: ../../rumi-notification-service, args: { PORT: 8085 } }
     ports: ["8085:8085"]
+    environment:
+      NOTIFICATION_DB_URL: jdbc:postgresql://postgres:5432/notificationsdb
+      NOTIFICATION_DB_USERNAME: rumi
+      NOTIFICATION_DB_PASSWORD: rumi
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: rumi
+      RABBITMQ_PASSWORD: rumi
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
   rumi-safety-service:
     build: { context: ../../rumi-safety-service, args: { PORT: 8086 } }
     ports: ["8086:8086"]
