@@ -38,7 +38,7 @@ Notes on endpoint 1:
 | Service | Port | What exists instead |
 |---|---|---|
 | `rumi-monitoring-service` | 8082 | `SensorReadingRecordedPublisher` (RabbitMQ) |
-| `rumi-seismic-service` | 8083 | `SensorReadingRecordedSubscriber` (RabbitMQ); `IgpFeedClient` (US13) and `RiskIndexCalculationService` (US11) exist but are not exposed over REST |
+| `rumi-seismic-service` | 8083 | `SensorReadingRecordedSubscriber` & `RabbitCorrelatedSeismicEventPublisher` (RabbitMQ); `IgpFeedClient` (US13) and `RiskIndexCalculationService` (US11) |
 
 ## Application-layer operations not exposed over REST
 
