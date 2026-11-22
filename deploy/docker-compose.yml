@@ -1,4 +1,3 @@
-
 # Rumi completo en local con infraestructura real.
 # Requiere los 9 repositorios clonados lado a lado (ver clone-all.sh).
 # Uso, desde rumi-backend/deploy: docker compose up --build
@@ -25,6 +24,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    networks:
+      - rumi-net
 
   timescaledb:
     image: timescale/timescaledb:2.17.2-pg16
@@ -41,6 +42,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    networks:
+      - rumi-net
 
   rabbitmq:
     image: rabbitmq:3.13-management
@@ -55,11 +58,14 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - rumi-net
 
   rumi-api-gateway:
     build: { context: ../../rumi-api-gateway, args: { PORT: 8080 } }
     ports: ["8080:8080"]
     environment:
+      SERVER_PORT: 8080
       BUILDING_SERVICE_URL: http://rumi-building-service:8081
       MONITORING_SERVICE_URL: http://rumi-monitoring-service:8082
       SEISMIC_SERVICE_URL: http://rumi-seismic-service:8083
@@ -69,21 +75,37 @@ services:
       BILLING_SERVICE_URL: http://rumi-billing-service:8087
       MAINTENANCE_SERVICE_URL: http://rumi-maintenance-service:8088
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET (at least 32 characters) before running docker compose}
+    depends_on:
+      - rumi-building-service
+      - rumi-monitoring-service
+      - rumi-seismic-service
+      - rumi-iam-service
+      - rumi-notification-service
+      - rumi-safety-service
+      - rumi-billing-service
+      - rumi-maintenance-service
+    networks:
+      - rumi-net
+
   rumi-building-service:
     build: { context: ../../rumi-building-service, args: { PORT: 8081 } }
     ports: ["8081:8081"]
     environment:
+      SERVER_PORT: 8081
       BUILDING_DB_URL: jdbc:postgresql://postgres:5432/buildingsdb
       BUILDING_DB_USERNAME: rumi
       BUILDING_DB_PASSWORD: rumi
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - rumi-net
 
   rumi-monitoring-service:
     build: { context: ../../rumi-monitoring-service, args: { PORT: 8082 } }
     ports: ["8082:8082"]
     environment:
+      SERVER_PORT: 8082
       MONITORING_DB_URL: jdbc:postgresql://timescaledb:5432/sensorreadingsdb
       MONITORING_DB_USERNAME: rumi
       MONITORING_DB_PASSWORD: rumi
@@ -98,11 +120,14 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    networks:
+      - rumi-net
 
   rumi-seismic-service:
     build: { context: ../../rumi-seismic-service, args: { PORT: 8083 } }
     ports: ["8083:8083"]
     environment:
+      SERVER_PORT: 8083
       SEISMIC_DB_URL: jdbc:postgresql://postgres:5432/seismiceventsdb
       SEISMIC_DB_USERNAME: rumi
       SEISMIC_DB_PASSWORD: rumi
@@ -110,15 +135,22 @@ services:
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: rumi
       RABBITMQ_PASSWORD: rumi
+      MESSAGING_ENABLED: "true"
+      IGP_LATEST_EVENT_URL: ${IGP_LATEST_EVENT_URL:-http://localhost:8099/igp/latest-event}
+      RISK_STRATEGY: ${RISK_STRATEGY:-rule-based}
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    networks:
+      - rumi-net
+
   rumi-iam-service:
     build: { context: ../../rumi-iam-service, args: { PORT: 8084 } }
     ports: ["8084:8084"]
     environment:
+      SERVER_PORT: 8084
       IAM_DB_URL: jdbc:postgresql://postgres:5432/iamdb
       IAM_DB_USERNAME: rumi
       IAM_DB_PASSWORD: rumi
@@ -126,10 +158,14 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - rumi-net
+
   rumi-notification-service:
     build: { context: ../../rumi-notification-service, args: { PORT: 8085 } }
     ports: ["8085:8085"]
     environment:
+      SERVER_PORT: 8085
       NOTIFICATION_DB_URL: jdbc:postgresql://postgres:5432/notificationsdb
       NOTIFICATION_DB_USERNAME: rumi
       NOTIFICATION_DB_PASSWORD: rumi
@@ -137,29 +173,50 @@ services:
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: rumi
       RABBITMQ_PASSWORD: rumi
+      MESSAGING_ENABLED: "true"
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    networks:
+      - rumi-net
+
   rumi-safety-service:
     build: { context: ../../rumi-safety-service, args: { PORT: 8086 } }
     ports: ["8086:8086"]
+    environment:
+      SERVER_PORT: 8086
+    networks:
+      - rumi-net
+
   rumi-billing-service:
     build: { context: ../../rumi-billing-service, args: { PORT: 8087 } }
     ports: ["8087:8087"]
     environment:
+      SERVER_PORT: 8087
       BILLING_DB_URL: jdbc:postgresql://postgres:5432/billingdb
       BILLING_DB_USERNAME: rumi
       BILLING_DB_PASSWORD: rumi
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - rumi-net
+      
   rumi-maintenance-service:
     build: { context: ../../rumi-maintenance-service, args: { PORT: 8088 } }
     ports: ["8088:8088"]
+    environment:
+      SERVER_PORT: 8088
+    networks:
+      - rumi-net
 
 volumes:
   postgres_data:
   timescaledb_data:
   rabbitmq_data:
+
+networks:
+  rumi-net:
+    driver: bridge
