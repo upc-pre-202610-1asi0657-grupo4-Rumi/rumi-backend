@@ -17,6 +17,8 @@ services:
       - ../../rumi-notification-service/docs/schema.sql:/opt/rumi/notification-schema.sql:ro
       - ../../rumi-iam-service/docs/schema.sql:/opt/rumi/iam-schema.sql:ro
       - ./postgres/init/04-create-iam-database.sql:/docker-entrypoint-initdb.d/04-create-iam-database.sql:ro
+      - ../../rumi-billing-service/docs/schema.sql:/opt/rumi/billing-schema.sql:ro
+      - ./postgres/init/05-create-billing-database.sql:/docker-entrypoint-initdb.d/05-create-billing-database.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U rumi -d buildingsdb"]
       interval: 5s
@@ -193,9 +195,15 @@ services:
     ports: ["8087:8087"]
     environment:
       SERVER_PORT: 8087
+      BILLING_DB_URL: jdbc:postgresql://postgres:5432/billingdb
+      BILLING_DB_USERNAME: rumi
+      BILLING_DB_PASSWORD: rumi
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - rumi-net
-
+      
   rumi-maintenance-service:
     build: { context: ../../rumi-maintenance-service, args: { PORT: 8088 } }
     ports: ["8088:8088"]
