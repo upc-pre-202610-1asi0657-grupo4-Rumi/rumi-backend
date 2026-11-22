@@ -32,6 +32,11 @@ Los scripts de inicializacion solo se ejecutan con un volumen vacio; para recrea
 bases de datos usa `docker compose down -v`. Antes de `docker compose up` exporta
 `JWT_SECRET` (al menos 32 caracteres), por ejemplo `export JWT_SECRET=...`.
 
+`billingdb` tambien se aloja en PostgreSQL y se crea con sus tablas y los dos planes desde
+`rumi-billing-service/docs/schema.sql` (script `05-create-billing-database.sql`). Si ya
+tenias el volumen creado antes de este cambio, ejecuta una vez `docker compose down -v`
+para que se cree `billingdb`. Billing no necesita `JWT_SECRET`: el gateway valida el token.
+
 `buildingsdb` y `seismiceventsdb` se alojan en PostgreSQL; `sensorreadingsdb` se
 aloja en TimescaleDB, con la extensión `timescaledb` habilitada. Los datos persisten
 en volúmenes de Docker.
