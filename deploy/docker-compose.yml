@@ -95,8 +95,15 @@ services:
       BUILDING_DB_URL: jdbc:postgresql://postgres:5432/buildingsdb
       BUILDING_DB_USERNAME: rumi
       BUILDING_DB_PASSWORD: rumi
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: rumi
+      RABBITMQ_PASSWORD: rumi
+      MESSAGING_ENABLED: "true"
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - rumi-net
@@ -155,8 +162,14 @@ services:
       IAM_DB_USERNAME: rumi
       IAM_DB_PASSWORD: rumi
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET (at least 32 characters) before running docker compose}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: rumi
+      RABBITMQ_PASSWORD: rumi
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - rumi-net

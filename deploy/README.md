@@ -24,8 +24,15 @@ Las credenciales locales para las bases de datos y RabbitMQ son `rumi` / `rumi`.
 RabbitMQ Management queda disponible en `http://localhost:15672`.
 
 `notificationsdb` tambien se aloja en PostgreSQL. Se crea junto con sus tablas desde
-`rumi-notification-service/docs/schema.sql` al inicializar el volumen. Monitoring y
-Notifications se conectan a RabbitMQ.
+`rumi-notification-service/docs/schema.sql` al inicializar el volumen. Monitoring,
+Seismic, Notifications, Building e IAM se conectan a RabbitMQ.
+
+Building publica `BuildingRegistered` en el exchange `rumi.building-management.events` mediante un
+outbox transaccional (tabla `outbox_events`, decisión D3.9) e IAM lo consume en la cola
+`rumi.iam.building-registered` para vincular al administrador con su edificio. Si RabbitMQ no
+está disponible, el evento espera en el outbox y se publica cuando vuelve. Las tablas
+`outbox_events` (buildingsdb) y `processed_events` (iamdb) vienen de los `docs/schema.sql` de cada
+servicio: si tu volumen se creó antes de este cambio, ejecuta una vez `docker compose down -v`.
 
 `iamdb` tambien se aloja en PostgreSQL y se crea desde `rumi-iam-service/docs/schema.sql`.
 Los scripts de inicializacion solo se ejecutan con un volumen vacio; para recrear las
