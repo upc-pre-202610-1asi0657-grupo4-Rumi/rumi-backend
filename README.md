@@ -16,7 +16,7 @@ Repositorio de origen del backend de **Rumi** (Kuntur Labs): el monolito modular
 
 ## Microservicios
 
-| Servicio | Puerto | Estado en el Sprint 1 |
+| Servicio | Puerto interno | Estado en el Sprint 1 |
 |---|---|---|
 | [rumi-api-gateway](https://github.com/upc-pre-202610-1asi0657-grupo4-Rumi/rumi-api-gateway) | 8080 | Enrutamiento |
 | [rumi-building-service](https://github.com/upc-pre-202610-1asi0657-grupo4-Rumi/rumi-building-service) | 8081 | API REST implementada |
@@ -27,6 +27,9 @@ Repositorio de origen del backend de **Rumi** (Kuntur Labs): el monolito modular
 | [rumi-safety-service](https://github.com/upc-pre-202610-1asi0657-grupo4-Rumi/rumi-safety-service) | 8086 | Estructura inicial |
 | [rumi-billing-service](https://github.com/upc-pre-202610-1asi0657-grupo4-Rumi/rumi-billing-service) | 8087 | Estructura inicial |
 | [rumi-maintenance-service](https://github.com/upc-pre-202610-1asi0657-grupo4-Rumi/rumi-maintenance-service) | 8088 | Estructura inicial |
+
+En Docker Compose solo el gateway (8080) se publica en el host; los demás puertos son internos y se
+llega a los servicios a través del gateway (ver [`deploy/README.md`](deploy/README.md#puertos)).
 
 Cada servicio es independiente: tiene su propio repositorio, su Dockerfile y su flujo de integración continua. El archivo `deploy/docker-compose.yml` no pertenece a ninguno de ellos; solo indica qué contenedores se levantan juntos para pruebas locales.
 
@@ -41,6 +44,7 @@ mkdir rumi && cd rumi
 git clone https://github.com/upc-pre-202610-1asi0657-grupo4-Rumi/rumi-backend.git
 bash rumi-backend/deploy/clone-all.sh      # clona los nueve servicios al lado
 cd rumi-backend/deploy
+cp .env.example .env                       # y reemplaza change-me: openssl rand -base64 48
 docker compose up --build
 ```
 
@@ -49,12 +53,14 @@ docker compose up --build
 ### Verificación
 
 ```bash
-docker ps    # nueve contenedores en estado Up
-curl http://localhost:8080/api/v1/buildings/7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d
+docker ps    # nueve servicios en estado Up, más PostgreSQL, TimescaleDB y RabbitMQ
+curl http://localhost:8080/api/v1/gateway/health
 curl http://localhost:8080/api/v1/authentication/health
 ```
 
-La primera consulta llega a `rumi-building-service` a través del gateway y devuelve el edificio de ejemplo (Torre Miraflores). La segunda llega a `rumi-iam-service` y responde `{"status":"UP"}`.
+La primera consulta responde el propio gateway. La segunda llega a `rumi-iam-service` a través del gateway y
+responde `{"status":"UP"}`. El resto de rutas exige un token: el recorrido completo está en
+`deploy/scripts/e2e-building-access.sh`.
 
 ## Ejecutar el monolito (línea base)
 

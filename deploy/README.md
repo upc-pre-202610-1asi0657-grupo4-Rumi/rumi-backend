@@ -7,21 +7,47 @@ mkdir rumi && cd rumi
 git clone https://github.com/upc-pre-202610-1asi0657-grupo4-Rumi/rumi-backend.git
 bash rumi-backend/deploy/clone-all.sh
 cd rumi-backend/deploy
+cp .env.example .env      # y reemplaza change-me: openssl rand -base64 48
 docker compose up --build
 docker ps
-curl http://localhost:8080/api/v1/buildings
+curl http://localhost:8080/api/v1/gateway/health
 ```
 
-| Servicio | Puerto |
-|---|---|
-| api-gateway | 8080 |
-| building / monitoring / seismic | 8081 / 8082 / 8083 |
-| iam / notification / safety / billing / maintenance | 8084 a 8088 |
-| PostgreSQL / TimescaleDB | 5432 / 5433 |
-| RabbitMQ AMQP / management | 5672 / 15672 |
+## Puertos
+
+Solo el gateway se publica en la red: todas las peticiones pasan por él y por su validación del JWT.
+La infraestructura se publica únicamente en `127.0.0.1` (no es accesible desde otras máquinas) y los
+microservicios no publican puertos: el gateway los alcanza por la red interna `rumi-net`.
+
+| Componente | Puerto en el host | Interno |
+|---|---|---|
+| api-gateway | `8080` (todas las interfaces) | 8080 |
+| building / monitoring / seismic | no se publica | 8081 / 8082 / 8083 |
+| iam / notification / safety / billing / maintenance | no se publica | 8084 a 8088 |
+| PostgreSQL / TimescaleDB | `127.0.0.1:5432` / `127.0.0.1:5433` | 5432 |
+| RabbitMQ AMQP / management | `127.0.0.1:5672` / `127.0.0.1:15672` | 5672 / 15672 |
 
 Las credenciales locales para las bases de datos y RabbitMQ son `rumi` / `rumi`.
-RabbitMQ Management queda disponible en `http://localhost:15672`.
+RabbitMQ Management queda disponible en `http://localhost:15672`. Los tests de
+`rumi-notification-service` siguen usando el RabbitMQ local en `127.0.0.1:5672`.
+
+### Puertos de los servicios para depurar
+
+Para abrir el Swagger UI de un servicio o llamarlo sin el gateway, añade `docker-compose.debug.yml`,
+que publica los puertos 8081 a 8088 **solo en `127.0.0.1`**:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d
+# por ejemplo: http://localhost:8085/swagger-ui.html
+```
+
+Sin el `-f`, los servicios no publican puertos. **No renombres este archivo a
+`docker-compose.override.yml`**: Compose lo cargaría automáticamente en cada `docker compose up` y
+volvería a publicar los puertos de todos los servicios.
+
+`JWT_SECRET` es obligatorio: si falta en `.env`, `docker compose` se detiene con el mensaje
+`Set JWT_SECRET (at least 32 characters) before running docker compose`. El valor `change-me` de
+`.env.example` no sirve: el gateway e IAM exigen al menos 32 caracteres.
 
 `notificationsdb` tambien se aloja en PostgreSQL. Se crea junto con sus tablas desde
 `rumi-notification-service/docs/schema.sql` al inicializar el volumen. Monitoring,
