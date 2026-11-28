@@ -19,8 +19,35 @@ services:
       - ./postgres/init/04-create-iam-database.sql:/docker-entrypoint-initdb.d/04-create-iam-database.sql:ro
       - ../../rumi-billing-service/docs/schema.sql:/opt/rumi/billing-schema.sql:ro
       - ./postgres/init/05-create-billing-database.sql:/docker-entrypoint-initdb.d/05-create-billing-database.sql:ro
+      # Long syntax: if a source file is missing, Compose fails instead of creating an empty directory.
+      - type: bind
+        source: ../../rumi-safety-service/docs/schema.sql
+        target: /opt/rumi/safety-schema.sql
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./postgres/init/06-create-evacuation-database.sql
+        target: /docker-entrypoint-initdb.d/06-create-evacuation-database.sql
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ../../rumi-maintenance-service/docs/schema.sql
+        target: /opt/rumi/maintenance-schema.sql
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./postgres/init/07-create-maintenance-database.sql
+        target: /docker-entrypoint-initdb.d/07-create-maintenance-database.sql
+        read_only: true
+        bind:
+          create_host_path: false
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U rumi -d buildingsdb"]
+      # TCP, not the socket: while the init scripts run, PostgreSQL only listens on the socket, so the
+      # services wait until every database and schema has been created.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U rumi -d buildingsdb"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -200,6 +227,12 @@ services:
     ports: ["8086:8086"]
     environment:
       SERVER_PORT: 8086
+      SAFETY_DB_URL: jdbc:postgresql://postgres:5432/evacuationdb
+      SAFETY_DB_USERNAME: rumi
+      SAFETY_DB_PASSWORD: rumi
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - rumi-net
 
@@ -222,6 +255,12 @@ services:
     ports: ["8088:8088"]
     environment:
       SERVER_PORT: 8088
+      MAINTENANCE_DB_URL: jdbc:postgresql://postgres:5432/maintenancedb
+      MAINTENANCE_DB_USERNAME: rumi
+      MAINTENANCE_DB_PASSWORD: rumi
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - rumi-net
 
