@@ -1,6 +1,8 @@
 # Rumi completo en local con infraestructura real.
 # Requiere los 9 repositorios clonados lado a lado (ver clone-all.sh).
 # Uso, desde rumi-backend/deploy: docker compose up --build
+# Solo el gateway (8080) se publica en la red; la infraestructura, solo en 127.0.0.1.
+# Puertos de los servicios para depurar: -f docker-compose.yml -f docker-compose.debug.yml
 services:
   postgres:
     image: postgres:16-alpine
@@ -8,7 +10,7 @@ services:
       POSTGRES_USER: rumi
       POSTGRES_PASSWORD: rumi
       POSTGRES_DB: buildingsdb
-    ports: ["5432:5432"]
+    ports: ["127.0.0.1:5432:5432"]
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ../../rumi-building-service/docs/schema.sql:/docker-entrypoint-initdb.d/01-building-schema.sql:ro
@@ -60,7 +62,7 @@ services:
       POSTGRES_USER: rumi
       POSTGRES_PASSWORD: rumi
       POSTGRES_DB: sensorreadingsdb
-    ports: ["5433:5432"]
+    ports: ["127.0.0.1:5433:5432"]
     volumes:
       - timescaledb_data:/var/lib/postgresql/data
       - ./timescaledb/init/01-enable-timescaledb.sql:/docker-entrypoint-initdb.d/01-enable-timescaledb.sql:ro
@@ -77,7 +79,8 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: rumi
       RABBITMQ_DEFAULT_PASS: rumi
-    ports: ["5672:5672", "15672:15672"]
+    # Only on this machine: the notification tests still use the local broker (127.0.0.1:5672).
+    ports: ["127.0.0.1:5672:5672", "127.0.0.1:15672:15672"]
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
@@ -90,6 +93,7 @@ services:
 
   rumi-api-gateway:
     build: { context: ../../rumi-api-gateway, args: { PORT: 8080 } }
+    # The only port published to the network: every request goes through the gateway.
     ports: ["8080:8080"]
     environment:
       SERVER_PORT: 8080
@@ -116,7 +120,7 @@ services:
 
   rumi-building-service:
     build: { context: ../../rumi-building-service, args: { PORT: 8081 } }
-    ports: ["8081:8081"]
+    expose: ["8081"]
     environment:
       SERVER_PORT: 8081
       BUILDING_DB_URL: jdbc:postgresql://postgres:5432/buildingsdb
@@ -137,7 +141,7 @@ services:
 
   rumi-monitoring-service:
     build: { context: ../../rumi-monitoring-service, args: { PORT: 8082 } }
-    ports: ["8082:8082"]
+    expose: ["8082"]
     environment:
       SERVER_PORT: 8082
       MONITORING_DB_URL: jdbc:postgresql://timescaledb:5432/sensorreadingsdb
@@ -159,7 +163,7 @@ services:
 
   rumi-seismic-service:
     build: { context: ../../rumi-seismic-service, args: { PORT: 8083 } }
-    ports: ["8083:8083"]
+    expose: ["8083"]
     environment:
       SERVER_PORT: 8083
       SEISMIC_DB_URL: jdbc:postgresql://postgres:5432/seismiceventsdb
@@ -182,7 +186,7 @@ services:
 
   rumi-iam-service:
     build: { context: ../../rumi-iam-service, args: { PORT: 8084 } }
-    ports: ["8084:8084"]
+    expose: ["8084"]
     environment:
       SERVER_PORT: 8084
       IAM_DB_URL: jdbc:postgresql://postgres:5432/iamdb
@@ -203,7 +207,7 @@ services:
 
   rumi-notification-service:
     build: { context: ../../rumi-notification-service, args: { PORT: 8085 } }
-    ports: ["8085:8085"]
+    expose: ["8085"]
     environment:
       SERVER_PORT: 8085
       NOTIFICATION_DB_URL: jdbc:postgresql://postgres:5432/notificationsdb
@@ -224,7 +228,7 @@ services:
 
   rumi-safety-service:
     build: { context: ../../rumi-safety-service, args: { PORT: 8086 } }
-    ports: ["8086:8086"]
+    expose: ["8086"]
     environment:
       SERVER_PORT: 8086
       SAFETY_DB_URL: jdbc:postgresql://postgres:5432/evacuationdb
@@ -238,7 +242,7 @@ services:
 
   rumi-billing-service:
     build: { context: ../../rumi-billing-service, args: { PORT: 8087 } }
-    ports: ["8087:8087"]
+    expose: ["8087"]
     environment:
       SERVER_PORT: 8087
       BILLING_DB_URL: jdbc:postgresql://postgres:5432/billingdb
@@ -252,7 +256,7 @@ services:
       
   rumi-maintenance-service:
     build: { context: ../../rumi-maintenance-service, args: { PORT: 8088 } }
-    ports: ["8088:8088"]
+    expose: ["8088"]
     environment:
       SERVER_PORT: 8088
       MAINTENANCE_DB_URL: jdbc:postgresql://postgres:5432/maintenancedb

@@ -1,0 +1,22 @@
+# Opt-in: publishes the port of every microservice on 127.0.0.1 only, to reach its Swagger UI or call
+# it without the gateway while debugging. It is NOT loaded by default:
+#   docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d
+# Do not rename it to docker-compose.override.yml: Compose would load it automatically and every
+# service port would be published again.
+services:
+  rumi-building-service:
+    ports: ["127.0.0.1:8081:8081"]
+  rumi-monitoring-service:
+    ports: ["127.0.0.1:8082:8082"]
+  rumi-seismic-service:
+    ports: ["127.0.0.1:8083:8083"]
+  rumi-iam-service:
+    ports: ["127.0.0.1:8084:8084"]
+  rumi-notification-service:
+    ports: ["127.0.0.1:8085:8085"]
+  rumi-safety-service:
+    ports: ["127.0.0.1:8086:8086"]
+  rumi-billing-service:
+    ports: ["127.0.0.1:8087:8087"]
+  rumi-maintenance-service:
+    ports: ["127.0.0.1:8088:8088"]
