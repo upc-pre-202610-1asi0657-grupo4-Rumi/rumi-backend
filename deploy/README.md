@@ -44,9 +44,31 @@ bases de datos usa `docker compose down -v`. Antes de `docker compose up` export
 tenias el volumen creado antes de este cambio, ejecuta una vez `docker compose down -v`
 para que se cree `billingdb`. Billing no necesita `JWT_SECRET`: el gateway valida el token.
 
+`evacuationdb` (Safety) y `maintenancedb` (Maintenance) tambien se alojan en PostgreSQL y se crean con
+sus tablas desde `rumi-safety-service/docs/schema.sql` y `rumi-maintenance-service/docs/schema.sql`
+(scripts `06-create-evacuation-database.sql` y `07-create-maintenance-database.sql`). Ninguno de los
+dos usa RabbitMQ.
+
 `buildingsdb` y `seismiceventsdb` se alojan en PostgreSQL; `sensorreadingsdb` se
 aloja en TimescaleDB, con la extensión `timescaledb` habilitada. Los datos persisten
 en volúmenes de Docker.
+
+### Scripts de inicialización y volúmenes
+
+Los scripts de `postgres/init` y los `docs/schema.sql` montados solo se ejecutan cuando el volumen de
+PostgreSQL está vacío, es decir, la primera vez. Si tu volumen se creó antes de que se añadiera una base
+o una tabla, esa base no existe y el servicio que la usa no arranca. Para recrearlas:
+
+```bash
+docker compose down -v   # borra TODOS los datos locales (bases y RabbitMQ)
+docker compose up --build -d
+```
+
+Usa `down -v` solo si aceptas perder esos datos; `docker compose down` (sin `-v`) o
+`docker compose stop` los conservan. El healthcheck de PostgreSQL comprueba por TCP
+(`pg_isready -h 127.0.0.1`), así que los servicios esperan a que terminen los scripts de init.
+Los montajes nuevos usan la sintaxis larga con `create_host_path: false`: si falta un `docs/schema.sql`,
+Compose falla en vez de montar un directorio vacío.
 
 Los Dockerfile están en cada repositorio de servicio.
 
@@ -74,10 +96,5 @@ RESET=1 bash deploy/scripts/e2e-building-access.sh    # antes hace docker compos
 - Cada ejecución usa correos nuevos, así que se puede repetir sin recrear los volúmenes.
 - `RESET=1` borra los volúmenes locales.
 - Termina con código 0 si todos los chequeos pasan; si no, el código es el número de fallos.
-- `SERVICES` cambia la lista de servicios que espera. Hoy safety y maintenance no arrancan en Compose
-  (les faltan las variables de base de datos), así que hay que excluirlos:
-
-```bash
-SERVICES="rumi-api-gateway rumi-building-service rumi-monitoring-service rumi-seismic-service rumi-iam-service rumi-notification-service rumi-billing-service" \
-  bash deploy/scripts/e2e-building-access.sh
-```
+- `SERVICES` cambia la lista de servicios que espera (por defecto, los nueve).
+- Para otro proyecto de Compose, exporta `COMPOSE_PROJECT_NAME` antes de ejecutarlo.
